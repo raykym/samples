@@ -46,7 +46,7 @@ sub dbsetting {
     my $dbuser = 'apachelog';
     my $dbpass = 'apachelogpass';
 
-    my $db = DBI->connect("dbi:mysql:dbname=$dbname;host=192.168.0.8;port=3306","$dbuser","$dbpass", {RaiseError=>0, AutoCommit=>1,mysql_enable_utf8=>1});
+    my $db = DBI->connect("dbi:mysql:dbname=$dbname;host=192.168.0.8;port=3306","$dbuser","$dbpass", {RaiseError=>1, AutoCommit=>1,mysql_enable_utf8=>1});
 
     #Table作成
     my $sql_1 ="CREATE TABLE IF NOT EXISTS $tblname(`line` int(10) NOT NULL AUTO_INCREMENT, `logline` text NOT NULL, PRIMARY KEY (`line`) ) engine = InnoDB";
@@ -151,6 +151,7 @@ my $inotify = Inotifyset();
                                 my @loglist = <$fhaccesslog>;
                                 foreach my $line (@loglist){
                                     $sth_2->execute($line);
+                                    DEbuglog "DBI::err";
                                          };
                                 DEbuglog "Check EVENT IN_MODIFY!!!";
                                 $inotify = Inotifyset();
