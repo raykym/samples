@@ -46,7 +46,7 @@ sub dbsetting {
     my $dbuser = 'apachelog';
     my $dbpass = 'apachelogpass';
 
-    my $db = DBI->connect("dbi:mysql:dbname=$dbname;host=192.168.0.8;port=3306","$dbuser","$dbpass", {RaiseError=>1, AutoCommit=>1,mysql_enable_utf8=>1});
+    my $db = DBI->connect("dbi:mysql:dbname=$dbname;host=192.168.0.8;port=3306","$dbuser","$dbpass", {RaiseError=>0, AutoCommit=>1,mysql_enable_utf8=>1});
 
     #Table作成
     my $sql_1 ="CREATE TABLE IF NOT EXISTS $tblname(`line` int(10) NOT NULL AUTO_INCREMENT, `logline` text NOT NULL, PRIMARY KEY (`line`) ) engine = InnoDB";
@@ -130,18 +130,13 @@ DEbuglog "Event loop start";
 # 監視用オブジェクトを定義
 my $inotify = Inotifyset();
 
-# イベントループ
-    my $cvout = AnyEvent->condvar;
-
-    my $w = AnyEvent->signal(
-        signal => "TERM",
-        cb => sub {
-              $stat = 0;  #whileループを止める
-              $cvout->send;
-              });
+# inotifyイベントループ(親プロセス用)
+sub Eventloop_inotify {
 
         while ($stat){
-                my $cv = AnyEvent->condvar;
+                my $cv_inotify = AnyEvent->condvar;
+
+                   $inotify = Inotifyset();
 
                     #ファイル監視のループ
                     my $inotify_w = AnyEvent->io (
@@ -151,13 +146,30 @@ my $inotify = Inotifyset();
                                 my @loglist = <$fhaccesslog>;
                                 foreach my $line (@loglist){
                                     $sth_2->execute($line);
-                                    DEbuglog "DBI::err";
                                          };
                                 DEbuglog "Check EVENT IN_MODIFY!!!";
-                                $inotify = Inotifyset();
-                               # $cv->send;
+                                $cv_inotify->send;
                                 } 
                           );
+
+                   my $w2 = AnyEvent->signal(
+                        signal => "TERM",
+                        cb => sub {
+                             $stat = 0;
+                             $cv_inotify->send;
+                             });
+                $cv_inotify->recv;
+                ($sth_1, $sth_2, $sth_3) = dbsetting();
+        };
+    return;
+    };
+
+
+# 日付テーブル更新イベントループ(子プロセス用)
+sub Eventloop_chngtbl {
+
+        while ($stat){
+                my $cv = AnyEvent->condvar;
 
                     #日付確認のループ
                     my $t = AnyEvent->timer(
@@ -171,19 +183,33 @@ my $inotify = Inotifyset();
                                 $sth_1->execute;
                                 DEbuglog "Make Table next day!";
 
-                                #ファイル監視も再設定する。
-                                $inotify = Inotifyset();
                                 $cv->send;
                               });
 
                    my $w2 = AnyEvent->signal(
                         signal => "TERM",
                         cb => sub {
+                             $stat = 0;
                              $cv->send;
                              });
                 $cv->recv;
         };
-  $cvout->recv;
+    return;
+    };
+
+
+#フォークしてプロセスを分ける
+my $pid = fork();
+
+if ( $pid == 0 ){
+    # 子プロセス
+    Eventloop_chngtbl();
+
+    } elsif ($pid != 0) {
+    # 親プロセス
+    Eventloop_inotify($pid);
+    };
+
 # Last setting
 
 $sth_1->finish;
