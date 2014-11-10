@@ -14,7 +14,7 @@ use DBI;
 
 $| = 1; #プリントバッファの抑制
 
-my $debug = "ON";
+my $debug = "OFF";
 my $debuglog = "./apachelogadpt2db.log";
 
 sub DEbuglog {
@@ -29,8 +29,9 @@ sub DEbuglog {
 DEbuglog "Logging Start ------------------------------";
 
 # /var/log/apache/access.logを監視して、DBに書き出す
-# テーブルは日付で作成 日付更新もタイマーで監視する。
-# KNOPPIX用では/var/logはメモリ上にあるため、再起動時に初期化される。
+# テーブルは日付で作成 日付更新,forkした別プロセスで更新実行
+# KNOPPIX用なので/var/logはメモリ上にあるため、再起動時に初期化される。
+# cronが稼働していればこんなに面倒なプログラムは不要なのに
 
 # DB初期設定、日付更新で更新するためにサブルーチン化
 sub dbsetting {
@@ -121,13 +122,12 @@ DEbuglog "span: $span";
 
 my $stat = 1; #無限ループ用フラグ
 
-DEbuglog "Event loop start";
 
 # 監視ファイルハンドル設定
   my $fhaccesslog = new IO::File;
      $fhaccesslog->open("/var/log/apache2/access.log");
 
-# 監視用オブジェクトを定義
+# 監視用オブジェクトを定義 main::$inotifyの為ココに
 my $inotify = Inotifyset();
 
 # inotifyイベントループ(親プロセス用)
@@ -149,8 +149,7 @@ sub Eventloop_inotify {
                                          };
                                 DEbuglog "Check EVENT IN_MODIFY!!!";
                                 $cv_inotify->send;
-                                } 
-                          );
+                                }); 
 
                    my $w2 = AnyEvent->signal(
                         signal => "TERM",
@@ -159,6 +158,8 @@ sub Eventloop_inotify {
                              $cv_inotify->send;
                              });
                 $cv_inotify->recv;
+
+                #日付更新でテーブル変更を検知するために、毎度DBを再設定
                 ($sth_1, $sth_2, $sth_3) = dbsetting();
         };
     return;
@@ -197,6 +198,7 @@ sub Eventloop_chngtbl {
     return;
     };
 
+DEbuglog "Event loop start";
 
 #フォークしてプロセスを分ける
 my $pid = fork();
