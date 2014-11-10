@@ -9,7 +9,8 @@ use DDP;
 use Geo::Coder::Google;
 
 my $geocoder = Geo::Coder::Google->new(apiver => 3);
-my $location = $geocoder->geocode ( location => 'Hollywood and Highland, Los Angeles, CA' );
+#my $location = $geocoder->geocode ( location => 'Hollywood and Highland, Los Angeles, CA' );
+my $location = $geocoder->geocode ( location => '静岡県富士宮市万野原新田' );
 
 #for my $i (keys $location) {
 #     say "$i: $location->{$i}  ";
@@ -24,4 +25,4 @@ my $location = $geocoder->geocode ( location => 'Hollywood and Highland, Los Ang
 say "$location->{geometry}->{location}->{lat}";
 say "$location->{geometry}->{location}->{lng}";
 
-print Dumper($location);
+#print Dumper($location);

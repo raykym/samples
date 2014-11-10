@@ -109,7 +109,7 @@ my $inotify = new Linux::Inotify2;
          sub {
             my $e = shift;
             DEbuglog "inotify setting.";
-             $e->w->cancel;
+          #   $e->w->cancel;
     });
    return $inotify;
 };

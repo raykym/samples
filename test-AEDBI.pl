@@ -81,11 +81,11 @@ my $inotify = new Linux::Inotify2;
    $inotify->watch ("/var/log/apache2/access.log", IN_MODIFY,
          sub {
             my $e = shift;
-            my @loglist = <$fhaccesslog>;
-            foreach my $line (@loglist){
-                    $sth_2->execute($line);
-                 };
-            say "Check EVENT IN_MODIFY!!!";
+        #    my @loglist = <$fhaccesslog>;
+        #    foreach my $line (@loglist){
+        #            $sth_2->execute($line);
+        #         };
+        #    say "Check EVENT IN_MODIFY!!! inotify";
           #   $e->w->cancel;
     });
    return $inotify;
@@ -120,7 +120,7 @@ sub Eventloop_inotify {
                                 foreach my $line (@loglist){
                                     $sth_2->execute($line);
                                          };
-                                say "Check EVENT IN_MODIFY!!!";
+                                say "Check EVENT IN_MODIFY!!! AnyEvent-io";
                                 $cv_inotify->send;
                                 }
                           );
