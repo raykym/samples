@@ -16,8 +16,8 @@ my $b=0;
 #	};
 
 # 単純に自分以外で割り切れる数字が無ければ素数
-my $startnum=10000;
-my $endnum=20000 ;
+my $startnum=1;
+my $endnum=10000 ;
 my $check_num ;
 
 foreach my $num ( $startnum..$endnum ){
@@ -44,7 +44,7 @@ foreach my $num ( $startnum..$endnum ){
         if ($flg == 1 ) { 
                         my $n61 = ($num -1) % 6;
                         my $n65 = ($num -5) % 6;
-			printf ("%8d: %8d %8d %31b\n",$num,$n61,$n65,$num);
+			printf ("%8d: %8d %8d \n",$num,$n61,$n65);
                         undef $n61;
                         undef $n65;
 			};
