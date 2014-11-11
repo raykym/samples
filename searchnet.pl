@@ -9,7 +9,6 @@ use warnings;
 
 use AnyEvent;
 use Net::Ping;
-use Data::Random qw(rand_chars);
 use DBI;
 
 # DB接続設定
@@ -46,12 +45,11 @@ my $myaddr = "192.168.0.8";
 sub ipcheck {
 
 # ランダムにipアドレスを作成 (Class D以降 224.0.0.0〜は除外する）
-# 乱数に偏りが見られる、整数化で0を消去するので１桁は除外して２桁以上に変更
 
-  do{ $col1 = rand_chars(set=>'numeric', min=>2, max=>3 )} until ($col1 < 224);
-  do{ $col2 = rand_chars(set=>'numeric', min=>2, max=>3 )} until ($col2 < 255);
-  do{ $col3 = rand_chars(set=>'numeric', min=>2, max=>3 )} until ($col3 < 255);
-  do{ $col4 = rand_chars(set=>'numeric', min=>2, max=>3 )} until ($col4 < 255);
+  do{ $col1 = rand(255)} until ($col1 < 224);
+  do{ $col2 = rand(255)} until ($col2 < 255);
+  do{ $col3 = rand(255)} until ($col3 < 255);
+  do{ $col4 = rand(255)} until ($col4 < 255);
 
  #文字から数字へ
   $col1 = int($col1);
