@@ -14,7 +14,7 @@ use DBI;
 
 $| = 1; #プリントバッファの抑制
 
-my $debug = "OFF";
+my $debug = "ON";
 my $debuglog = "./apachelogadpt2db.log";
 
 sub DEbuglog {
@@ -89,12 +89,12 @@ DEbuglog "Make Table if not exists";
 # 日付更新サブルーチン
 sub spancalc {
     # 日付更新の計算
-    my $ythis = time2str("%Y",time);
-    my $mthis = time2str("%m",time);
-    my $dthis = time2str("%d",time);
+    my $yafter = time2str("%Y",time+86400);
+    my $mafter = time2str("%m",time+86400);
+    my $dafter = time2str("%d",time+86400);
 
     # 日付変更のepoc time 月は-1で指定する
-    my $dayline = timelocal( 0, 0, 0, $dthis+1, $mthis-1, $ythis);
+    my $dayline = timelocal( 0, 0, 0, $dafter, $mafter-1, $yafter);
 
     my $span = $dayline-time; #今日の終わるまでの秒数
 
