@@ -6,11 +6,16 @@ use utf8;
 use Encode;
 use LWP::UserAgent;
 use HTTP::Request::Common qw(POST);
+use Date::Format;
 
-my $url = "http://192.168.0.5:3000/data_tbl";
+#my $url = "http://192.168.0.5:3100/data_tbl";
+my $url = "http://192.168.0.8/websqlite/data_tbl";
+
+#日付チェック
+my $timestamp = time2str("%Y-%m-%d %H:%M:%S",time);
 
 my %params = (
-    data => 'testdata',
+    data => "$timestamp: あいうえおかきくけこさしすせそ",
     );
 
 my $request = POST($url,[%params]);

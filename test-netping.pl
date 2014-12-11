@@ -8,7 +8,8 @@ my $p1 = Net::Ping->new("icmp");
 my $p2 = Net::Ping->new("tcp",2);
    $p2->port_number("80");
 
-my $host = "westwind.iobb.net";
+#my $host = "westwind.iobb.net";
+my $host = "192.168.0.8";
 #my $host = "283.79.43.200";
 #my $host = "192.168.0.1";
 my $myaddr = "192.168.0.8";

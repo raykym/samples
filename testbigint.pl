@@ -1,4 +1,4 @@
-#!/opt/lampp/bin/perl
+#!/usr/bin/env perl
 
 # 単純な使い方を試してみた。
 
@@ -8,7 +8,7 @@ use warnings;
 use Math::BigInt;
 use Math::BigFloat;
 
-my $n = 100 ;
+my $n = 1000;
 
 my $a = 5 ** $n ;
 

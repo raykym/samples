@@ -49,8 +49,9 @@ sub dbsetting {
     my $dbname = 'apachelog';
     my $dbuser = 'apachelog';
     my $dbpass = 'apachelogpass';
+    my $dbhost = '192.168.0.8';
 
-    my $db = DBI->connect("dbi:mysql:dbname=$dbname;host=192.168.0.8;port=3306","$dbuser","$dbpass", {RaiseError=>0, AutoCommit=>1,mysql_enable_utf8=>1});
+    my $db = DBI->connect("dbi:mysql:dbname=$dbname;host=$dbhost;port=3306","$dbuser","$dbpass", {RaiseError=>0, AutoCommit=>1,mysql_enable_utf8=>1});
 
     #Table作成
     my $sql_1 ="CREATE TABLE IF NOT EXISTS $tblname(`line` int(10) NOT NULL AUTO_INCREMENT, `logline` text NOT NULL, PRIMARY KEY (`line`) ) engine = InnoDB";
@@ -110,13 +111,25 @@ sub spancalc {
 sub Inotifyset {
 my $inotify = new Linux::Inotify2;
 
-   $inotify->watch ("/var/log/apache2/access.log", IN_MODIFY,
+   $inotify->watch ("$acclog", IN_MODIFY,
          sub {
             my $e = shift;
             DEbuglog "inotify setting.";
           #   $e->w->cancel;
     });
    return $inotify;
+};
+# ssl_access.log用
+sub Inotifyset2 {
+my $inotify2 = new Linux::Inotify2;
+
+   $inotify2->watch ("$sacclog", IN_MODIFY,
+         sub {
+            my $e = shift;
+            DEbuglog "inotify setting.";
+          #   $e->w->cancel;
+    });
+   return $inotify2;
 };
 
 
@@ -129,10 +142,13 @@ my $stat = 1; #無限ループ用フラグ
 
 # 監視ファイルハンドル設定
   my $fhaccesslog = new IO::File;
-     $fhaccesslog->open("/var/log/apache2/access.log");
+     $fhaccesslog->open("$acclog");
+  my $fhaccesslogs = new IO::File;
+     $fhaccesslogs->open("$sacclog");
 
 # 監視用オブジェクトを定義 main::$inotifyの為ココに
 my $inotify = Inotifyset();
+my $inotify2 = Inotifyset2();
 
 # inotifyイベントループ(親プロセス用)
 sub Eventloop_inotify {
@@ -152,6 +168,20 @@ sub Eventloop_inotify {
                                     $sth_2->execute($line);
                                          };
                                 DEbuglog "Check EVENT IN_MODIFY!!!";
+                                $cv_inotify->send;
+                                }); 
+
+                   $inotify2 = Inotifyset2();
+
+                    my $inotify_w2 = AnyEvent->io (
+                          fh => $inotify2->fileno,
+                          poll => 'r',
+                          cb => sub {
+                                my @loglist = <$fhaccesslogs>;
+                                foreach my $line (@loglist){
+                                    $sth_2->execute($line);
+                                         };
+                                DEbuglog "Check EVENT SSL IN_MODIFY!!!";
                                 $cv_inotify->send;
                                 }); 
 

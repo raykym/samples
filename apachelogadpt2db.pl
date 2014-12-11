@@ -64,9 +64,6 @@ sub dbsetting {
     return ($sth_1, $sth_2, $sth_3);
     }
 
-# DB初期設定取得
-my ($sth_1,$sth_2, $sth_3) = dbsetting();
-DEbuglog "DB setting finish";
 
 # apacheが起動しているのか確認
 my $apcok = '0';
@@ -81,6 +78,10 @@ my $ptable = new Proc::ProcessTable;
 DEbuglog "apache2 Not Found" if $apcok eq '0';
 exit 0 if $apcok eq '0';
 
+
+# DB初期設定取得
+my ($sth_1,$sth_2, $sth_3) = dbsetting();
+DEbuglog "DB setting finish";
 
 # 日付テーブルの作成（無ければ）
 $sth_1->execute;

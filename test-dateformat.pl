@@ -16,3 +16,6 @@ say time2str("%Y%m%d%H%M",time+86400);
 say time2str("%Y",time+86400);
 say time2str("%m",time+86400);
 say time2str("%d",time+86400);
+
+#timestamp
+say time2str("%Y-%m-%d %H:%M:%S",time);
