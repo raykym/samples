@@ -111,7 +111,7 @@ my $cv = AnyEvent->condvar;
 
 my $t1 = AnyEvent->timer(
     after => 1,
-    interval => 1,
+    interval => 3,
     cb => sub {
 	ipcheck;
         }
