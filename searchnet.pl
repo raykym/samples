@@ -46,10 +46,10 @@ sub ipcheck {
 
 # ランダムにipアドレスを作成 (Class D以降 224.0.0.0〜は除外する）
 
-  do{ $col1 = rand(255)} until ($col1 < 224);
-  do{ $col2 = rand(255)} until ($col2 < 255);
-  do{ $col3 = rand(255)} until ($col3 < 255);
-  do{ $col4 = rand(255)} until ($col4 < 255);
+  $col1 = rand(224);
+  $col2 = rand(255);
+  $col3 = rand(255);
+  $col4 = rand(255);
 
  #文字から数字へ
   $col1 = int($col1);
