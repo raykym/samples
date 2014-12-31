@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 
 # Debian用に改変した。access.logとssl_access.logに分かれている為、両方をチェックして同じテーブルに書いてしまう。
+# logrotateに対応するため、HUPでリスタートするように改変
 
 use strict;
 use warnings;
@@ -158,6 +159,14 @@ sub Eventloop_inotify {
 
                    $inotify = Inotifyset();
 
+                #restart
+                 my $whup = AnyEvent->signal(
+                         signal => 'HUP',
+                         cb => sub{
+                                exec $0 or die "Not restart";
+                                }
+                          );
+
                     #ファイル監視のループ
                     my $inotify_w = AnyEvent->io (
                           fh => $inotify->fileno,
@@ -223,6 +232,14 @@ sub Eventloop_chngtbl {
 
                    my $w2 = AnyEvent->signal(
                         signal => "TERM",
+                        cb => sub {
+                             $stat = 0;
+                             $cv->send;
+                             });
+
+                   # 子プロセスは終了・・親プロセスで再起動するので。
+                   my $whup2 = AnyEvent->signal(
+                        signal => "HUP",
                         cb => sub {
                              $stat = 0;
                              $cv->send;
