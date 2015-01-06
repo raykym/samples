@@ -8,6 +8,7 @@
 # 1行でも30秒かかるので意味がなかった。
 # 1500万レコードを超えると100000一括の方が処理が早い。
 # 終了処理が無いのでレコードの終わりでも終了しない。
+# 10万で8分かかる、100万に増やしてみる。
 
 use strict;
 use warnings;
@@ -31,13 +32,13 @@ $dbh->do($create_table);
 my $insert = "INSERT INTO ipsearch_tbl (count, hostaddress, timestamp, icmp, http, https) VALUES (?,?,?,?,?,?);";
 my $sth_insert = $dbh->prepare($insert);
 
-my $last_sql = "SELECT max(timestamp),count FROM ipsearch_tbl ORDER BY timestamp";
+my $last_sql = "SELECT max(round(count)),count FROM ipsearch_tbl ORDER BY round(count)";
 my $last_sth = $dbh->prepare($last_sql);
    $last_sth->execute();
 my $ref_last = $last_sth->fetchrow_hashref();
 my $last_count = $ref_last->{count};
-   $last_count++;
-my $one_limit = 100000;
+   if ( defined $last_count) { $last_count++ } else { $last_count = 0 };
+my $one_limit = 1000000; # 1度に読み出す行数
 
 # プラグマ設定
    $dbh->do("PRAGMA synchronous = OFF");
