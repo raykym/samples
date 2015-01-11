@@ -24,6 +24,9 @@ my $chk_sth = $db->prepare($chk_sql);
 #プリントバッファの抑止
 $|=1;
 
+# ループ実行間隔
+my $span = 10;
+
 # 終了用PIDの表示
 print "PID $$ call kill $$\n";
 
@@ -103,7 +106,7 @@ my $cv = AnyEvent->condvar;
 
 my $t1 = AnyEvent->timer(
     after => 1,
-    interval => 3,
+    interval => $span,
     cb => sub {
 	ipcheck;
         }
