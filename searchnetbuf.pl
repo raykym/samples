@@ -74,7 +74,7 @@ my $myaddr = "192.168.0.8";
 
 # バルク件数の設定（乱数）
 sub makerand {
-    return rand(500)+500; #500を基準に並列実行時に同時をできるだけ避けるように
+    return rand(300)+300; #300を基準に並列実行時に同時をできるだけ避けるように
     }
 my $bcount = makerand();
    $bcount = int($bcount);
@@ -182,8 +182,11 @@ my $t1 = AnyEvent->timer(
 my $w = AnyEvent->signal(
     signal => 'TERM',
     cb => sub {
-	# タイマーを初期化して、ループを止める。
+	# タイマーを初期化しない。
 	#undef $t1;
+        # $bcountを減らして早めに終わらせる
+        $bcount = rand(30);
+        $bcount = int($bcount);
         $stat = 0; #無限ループ終了
         $cv->send;
         }
