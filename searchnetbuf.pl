@@ -34,6 +34,10 @@ my $sth_insert_m = $db->prepare($sql);
 my $chk_sql = "select hostaddress from privip_tbl where hostaddress = ?";
 my $chk_sth = $db->prepare($chk_sql);
 
+# p_ipsearch_tblに在るか確認する、
+my $chk2_sql = "select col0,col1,col2,col3 from p_ipsearch_tbl where col0 = ? and col1 = ? and col2 = ? and col3 = ? limit 1";
+my $chk2_sth = $db->prepare($chk2_sql);
+
 #sqlite設定
 my $dbname = "./ipsearch.$$.sqlite3"; #プロセス番号を付加しておく
 my $data_source = "dbi:SQLite:dbname=$dbname";
@@ -55,6 +59,9 @@ $|=1;
 # ループ実行間隔 sqlite3の書き込みなのでノンストップ
 my $span = 3;
 
+# 重複チェック 0:OFF 1:ON p_ipsearch_tblをチェックする DBにかかる負荷が大きい
+my $dup = 0;
+
 # 終了用PIDの表示
 print "PID $$ call kill $$\n";
 
@@ -74,7 +81,7 @@ my $myaddr = "192.168.0.8";
 
 # バルク件数の設定（乱数）
 sub makerand {
-    return rand(300)+300; #300を基準に並列実行時に同時をできるだけ避けるように
+    return rand(300)+100; #100を基準に並列実行時に同時書き込みをできるだけ避けるように
     }
 my $bcount = makerand();
    $bcount = int($bcount);
@@ -106,7 +113,17 @@ my $host = "$col1.$col2.$col3.$col4";
 
 # プライベートアドレスチェック 面倒だがcheckは$hostを利用
    $chk_sth->execute($host) or die "ERROR:". $chk_sth->errstr;
+
+   if ( $dup == 1 ){
+              $chk2_sth->execute($col1,$col2,$col3,$col4) or die "ERROR:". $chk2_sth->errstr;
+             }
+
+# $chk_resが０なら実施、それ以外はpassする。
+# プライベートアドレスチェック、重複チェック、カラムチェックの順でチェックする。
 my $chk_res = $chk_sth->rows;
+   if ( $dup == 1 ) { 
+                $chk_res = 1 if $chk2_sth->rows > 0; #p_ipsearch_tblに在る 
+                }
    $chk_res = 1 if $col1 == 0;  # $col1が0ならパスする為
 
 # chk_resが0ならばチェックを実行 
@@ -132,7 +149,7 @@ if ($chk_res == '0') {
     print "\r";
     } else {
 
-    #プライベープライベートアドレスの場合
+    #プライベープライベートアドレスの場合 重複の場合
     print "                              ";
     print "\r";
     print "$host PASS";
@@ -167,6 +184,7 @@ my $t1 = AnyEvent->timer(
     cb => sub {
 	ipcheck;
         $bcount--;
+        # $bcountが０で一度ループを抜ける
         if ($bcount == 0) {
               bulkinsert(); 
               $bcount = makerand();
@@ -185,7 +203,7 @@ my $w = AnyEvent->signal(
 	# タイマーを初期化しない。
 	#undef $t1;
         # $bcountを減らして早めに終わらせる
-        $bcount = rand(30);
+        $bcount = rand(10);
         $bcount = int($bcount);
         $stat = 0; #無限ループ終了
         $cv->send;
